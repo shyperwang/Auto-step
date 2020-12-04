@@ -1,0 +1,82 @@
+name: auto-step
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  watch:
+    types: started
+  schedule:
+    - cron: 0 14 * * *
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: 'setup python'
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+        
+    - name: requirements
+      run: |
+        pip3 install -r rsa.txt
+    - name: checkin
+        run: |
+            sed -i 's|SCKEY = ""|SCKEY = "${{ secrets.SCKEY }}"|' main.py
+
+        user=${{ secrets.USER }}
+        pwd=${{ secrets.PWD }}
+        step=${{ secrets.STEP }}
+        user_list=()
+        pwd_list=()
+        step_list=() 
+
+        for ul in ${user[*]}
+        do
+        user_list[${#user_list[*]}]=${ul}
+        done
+
+        for pl in ${pwd[*]}
+        do
+        pwd_list[${#pwd_list[*]}]=${pl}
+        done
+        
+        for sl in ${step[*]}
+        do
+        step_list[${#step_list[*]}]=${sl}
+        done
+        
+        user_num=${#user_list[*]}
+        pwd_num=${#pwd_list[*]}
+        
+        if [ $user_num != $pwd_num ];then
+        echo "账号和密码个数不对应"
+        exit 1
+        else
+        echo "共有 $user_num 个账号，即将开始签到"
+        fi   
+
+        random_time=$(($RANDOM % 5))
+        echo "等待 ${random_time} 分钟后开始签到"
+        for((i=1;i<=${random_time};i++));  
+        do
+        echo "倒计时:剩余 $[${random_time}-$i] 分钟"
+        sleep 1m
+        done
+
+        for ((i=0;i<$user_num;i++))
+        do
+        echo "----------"
+        echo "修改账号$(($i+1))"
+        python3 main.py <<EOF
+        ${sckey}
+        ${user_list[$i]}
+        ${pwd_list[$i]}
+        ${step_list[$i]}
+        EOF
+        echo "----------"
+        done
