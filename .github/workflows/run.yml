@@ -26,7 +26,7 @@ jobs:
         pip3 install -r rsa.txt
     - name: checkin
       run: | 
-        sed -i 's|SCKEY = ""|SCKEY = "${{ secrets.SCKEY }}"|' main.py
+        SCKEY=${{ secrets.SCKEY }}
         user=${{ secrets.USER }}
         pwd=${{ secrets.PWD }}
         step=${{ secrets.STEP }}
